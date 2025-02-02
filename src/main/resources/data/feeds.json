@@ -1,0 +1,22 @@
+[
+  {
+    "label": "p12pais",
+    "url": "https://www.pagina12.com.ar/rss/secciones/el-pais/notas",
+    "type": "xml"
+  },
+  {
+    "label": "p12eco",
+    "url": "https://www.pagina12.com.ar/rss/secciones/economia/notas",
+    "type": "xml"
+  },
+  {
+    "label": "elpaisArg",
+    "url": "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/argentina/portada",
+    "type": "xml"
+  },
+  {
+    "label": "wired",
+    "url": "https://es.wired.com/feed/gadgets/rss",
+    "type": "xml"
+  }
+]
