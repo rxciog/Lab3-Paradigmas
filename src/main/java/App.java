@@ -1,6 +1,13 @@
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.sql.SparkSession;
 
 import feed.Article;
 import feed.FeedParser;
@@ -61,9 +68,22 @@ public class App {
                 article.print();
             }
         }
+        //Creamos el punto de entrada para poder usar la API
+        SparkSession spark = SparkSession
+        .builder()
+        .appName("JavaWordCount")
+        .getOrCreate();
+
+        //Creamos archivo con todos los articulos de los feeds seleccionados
+        String path = "./src/main/resources/bigData.txt";
+        //maybe add try catch in case of IOExcpt
+        createFeedFile(allArticles, path);
+
+        JavaRDD<String> articles = spark.read().textFile(path).javaRDD();
 
         if (config.getComputeNamedEntities()) {
-            List<String> namedEntities = computeNamedEntities(allArticles, config.getHeuristic());
+            List<String> namedEntities = computeNamedEntities(articles, config.getHeuristic());
+            spark.stop();
             computeStats(namedEntities, config.getStats());
             
         }
@@ -103,37 +123,41 @@ public class App {
         return allArticles;
     }
 
-    private static List<String> computeNamedEntities (List<Article> allArticles, String heuristicName){
-        List<String> namedEntities = new ArrayList<>();
-        Heuristic heuristic;
-
+    private static List<String> computeNamedEntities (JavaRDD<String> allArticles, String heuristicName){
         // TODO: complete the message with the selected heuristic name
         System.out.println("Computing named entities using " + heuristicName);
+        List<String> namedEntities = new ArrayList<>();
 
         try {
-            heuristic = HeuristicFactory.createHeuristic(heuristicName);
-            String articles = converToString(allArticles);
-            namedEntities.addAll(heuristic.extractCandidates(articles));
-
+            //Asegurarse que spark no intente serializar heuristic -> la creamos en cada tarea ejecutada por los workers.
+            //Spark necesita serializar cq obj usado dentro de un RDD transformado para enviarlo a los workers
+            // serializar: convertir un obj en una secuencia de bytes para que pueda ser almacenada o transmitida y luego reconstruida
+            Heuristic heuristic = HeuristicFactory.createHeuristic(heuristicName);
+            namedEntities = allArticles.flatMap(a -> heuristic.extractCandidates(a).iterator()).collect();
+                                        
         } catch (IllegalArgumentException e ){
             ui.printHeuristicErrorMssg();
+            System.exit(1);
         }
-        
         return namedEntities; 
     }
 
-    private static String converToString(List<Article> allArticles){
-        String articles = "";
-        for ( Article article : allArticles){
-            articles = articles + " --- " + article.toString();
-        }
+    private static void createFeedFile(List<Article> allArticles , String strPath){
+        Path path = Paths.get(strPath);
 
-        return articles;
+        for ( Article article : allArticles){
+            try {
+                Files.write(path, article.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            } catch (IOException e){
+                System.out.println(e.getMessage());
+            }
+        }
     }
 
     private static void computeStats(List<String> namedEntities, String statType ){
-        
         // TODO: compute named entities using the selected heuristic
+        System.out.println("Computing stats on named entities...");
+
         Classifier assigner = new Classifier();
         List<NamedEntity> entities = assigner.classifyEntities(namedEntities);
         // TODO: Print stats
