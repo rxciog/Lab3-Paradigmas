@@ -32,7 +32,7 @@ public class CapitaLetterHeuristic implements Heuristic {
             candidates.add(matcher.group());
         }
 
-        String filepath= "src/data/stopwords.json";
+        String filepath= "src/main/resources/data/stopwords.json";
 
         // Filtrar
         try {
