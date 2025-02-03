@@ -36,18 +36,18 @@
     <dependency>
         <groupId>edu.stanford.nlp</groupId>
         <artifactId>stanford-corenlp</artifactId>
-        <version>4.4.0</version>
+        <version>4.5.8</version>
     </dependency>
     <dependency>
         <groupId>edu.stanford.nlp</groupId>
         <artifactId>stanford-corenlp</artifactId>
-        <version>4.4.0</version>
+        <version>4.5.8</version>
         <classifier>models</classifier>
     </dependency>
     <dependency>
         <groupId>edu.stanford.nlp</groupId>
         <artifactId>stanford-corenlp</artifactId>
-        <version>4.4.0</version>
+        <version>4.5.8</version>
         <classifier>models-spanish</classifier>
     </dependency>
     <dependency>
@@ -70,7 +70,7 @@
       <artifactId>commons-lang3</artifactId>
       <version>3.17.0</version>
     </dependency>
- </dependencies>
+  </dependencies>
 
   <build>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
@@ -100,6 +100,7 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
+              <classpathPrefix>libs/</classpathPrefix>
               <mainClass>App</mainClass>
             </manifest>
           </archive>
