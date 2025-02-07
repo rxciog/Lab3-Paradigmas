@@ -1,11 +1,12 @@
 package namedEntities;
 
+import java.io.Serializable;
 import java.util.List;
 
 import namedEntities.Classification.Category;
 import namedEntities.Classification.Topic;
 
-public class NamedEntity {
+public class NamedEntity implements Serializable {
     private String name;
     private Category category;
     private List<Topic> topic;
