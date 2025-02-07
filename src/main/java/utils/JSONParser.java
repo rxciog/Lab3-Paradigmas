@@ -1,12 +1,17 @@
 package utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -28,8 +33,8 @@ public class JSONParser {
         return feedsList;
     }
 
-    static public Set<String> parseJsonList(String jsonFilePath) throws IOException {
-        String jsonData = new String(Files.readAllBytes(Paths.get(jsonFilePath)));
+    static public Set<String> parseJsonList(InputStream inputStream) throws IOException {
+        String jsonData = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
         Set<String> list = new HashSet<>();
 
         JSONArray jsonArray = new JSONArray(jsonData);
