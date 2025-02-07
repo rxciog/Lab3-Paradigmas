@@ -1,4 +1,6 @@
 package namedEntities.heuristics;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -31,17 +33,21 @@ public class CapitaLetterHeuristic implements Heuristic {
         while (matcher.find()) {
             candidates.add(matcher.group());
         }
-
-        String filepath= "src/main/resources/data/stopwords.json";
-
         // Filtrar
-        try {
-            Set<String> stopWords = JSONParser.parseJsonList(filepath);
 
+        String filepath = "/stopwords.json";
+        try (InputStream is = getClass().getResourceAsStream(filepath)) {
+            if (is == null) {
+                throw new IOException("No se encontró el archivo: " + filepath);
+            }
+            
+            Set<String> stopWords = JSONParser.parseJsonList(is);
             candidates = candidates.stream().filter(word -> !stopWords.contains(word.toLowerCase())).collect(Collectors.toList());
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error al leer archivo json: ");
+            System.out.println(e.getMessage());
+            System.exit(1);
         }
         return candidates;
     }
