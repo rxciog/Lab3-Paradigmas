@@ -1,8 +1,9 @@
-package namedEntities;
+package namedEntities.Classification;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -18,19 +20,16 @@ import java.util.stream.Collectors;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import namedEntities.Classification.Category;
-import namedEntities.Classification.Topic;
+import namedEntities.NamedEntity;
 
-public class Classifier {
+public class Classifier implements Serializable {
     
-    public List<NamedEntity> classifyEntities(List<String> entities){
-        // necesario cambiar el nombre de la clase : Classifier
-        // pensar en si es necesario hacer una clase a parte para la interacción con la API de hugging face
-        // tal vez hacer una clase para eso y separarla del clasificador
-        // creating a separate API interaction class might allow for future reuse or not??
-        // anyways ...
+    public List<NamedEntity> classifyEntities(Iterator<String> entities){
+
         List<NamedEntity> namedEntities = new ArrayList<>();
-        Set<String> entitiesSet = new HashSet<String>(entities);
+        List<String> entitiesList = new ArrayList<>();
+        entities.forEachRemaining(entitiesList::add);
+        Set<String> entitiesSet = new HashSet<String>(entitiesList);
 
         for (String entity: entitiesSet){
 
@@ -40,7 +39,7 @@ public class Classifier {
             Topic[] topics = Topic.values();
             Topic topic = Topic.valueOf(getInputLabel(entity, topics));
             
-            int mentions = Collections.frequency(entities, entity);
+            int mentions = Collections.frequency(entitiesList, entity);
 
             NamedEntity ne = new NamedEntity(entity, category, List.of(topic), mentions);
             namedEntities.add(ne);
