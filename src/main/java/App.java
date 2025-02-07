@@ -13,9 +13,9 @@ import feed.Article;
 import feed.FeedParser;
 import namedEntities.heuristics.Heuristic;
 import namedEntities.heuristics.HeuristicFactory;
-import namedEntities.Classifier;
 import namedEntities.NamedEntity;
 import namedEntities.Stats;
+import namedEntities.Classification.Classifier;
 import utils.Config;
 import utils.FeedsData;
 import utils.JSONParser;
@@ -71,7 +71,7 @@ public class App {
         //Creamos el punto de entrada para poder usar la API
         SparkSession spark = SparkSession
         .builder()
-        .appName("JavaWordCount")
+        .appName("App")
         .getOrCreate();
 
         //Creamos archivo con todos los articulos de los feeds seleccionados
@@ -82,10 +82,8 @@ public class App {
         JavaRDD<String> articles = spark.read().textFile(path).javaRDD();
 
         if (config.getComputeNamedEntities()) {
-            List<String> namedEntities = computeNamedEntities(articles, config.getHeuristic());
-            spark.stop();
+            JavaRDD<String> namedEntities = computeNamedEntities(articles, config.getHeuristic());
             computeStats(namedEntities, config.getStats());
-            
         }
     }
 
@@ -123,17 +121,17 @@ public class App {
         return allArticles;
     }
 
-    private static List<String> computeNamedEntities (JavaRDD<String> allArticles, String heuristicName){
+    private static JavaRDD<String> computeNamedEntities (JavaRDD<String> allArticles, String heuristicName){
         // TODO: complete the message with the selected heuristic name
         System.out.println("Computing named entities using " + heuristicName);
-        List<String> namedEntities = new ArrayList<>();
+        JavaRDD<String> namedEntities = null;
 
         try {
             //Asegurarse que spark no intente serializar heuristic -> la creamos en cada tarea ejecutada por los workers.
             //Spark necesita serializar cq obj usado dentro de un RDD transformado para enviarlo a los workers
             // serializar: convertir un obj en una secuencia de bytes para que pueda ser almacenada o transmitida y luego reconstruida
             Heuristic heuristic = HeuristicFactory.createHeuristic(heuristicName);
-            namedEntities = allArticles.flatMap(a -> heuristic.extractCandidates(a).iterator()).collect();
+            namedEntities = allArticles.flatMap(a -> heuristic.extractCandidates(a).iterator());
                                         
         } catch (IllegalArgumentException e ){
             ui.printHeuristicErrorMssg();
@@ -154,12 +152,13 @@ public class App {
         }
     }
 
-    private static void computeStats(List<String> namedEntities, String statType ){
+    private static void computeStats(JavaRDD<String> namedEntities, String statType ){
         // TODO: compute named entities using the selected heuristic
         System.out.println("Computing stats on named entities...");
 
         Classifier assigner = new Classifier();
-        List<NamedEntity> entities = assigner.classifyEntities(namedEntities);
+        List<NamedEntity> entities = namedEntities.mapPartitions(partition -> 
+                assigner.classifyEntities(partition).iterator()).collect();
         // TODO: Print stats
         System.out.println("\nStats: ");
         if ( statType.contentEquals("top")){
