@@ -20,8 +20,6 @@ public class CoreNLP  implements Heuristic {
 
         pipeline.annotate(document);
 
-        System.out.println("Entities");
-
         for (CoreEntityMention em : document.entityMentions()){
             if ( !em.entityType().equals("DATE") && !em.entityType().equals("NUMBER") ){
                 candidates.add(em.text());
