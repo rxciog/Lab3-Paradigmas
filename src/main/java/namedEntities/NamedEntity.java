@@ -10,13 +10,15 @@ public class NamedEntity implements Serializable {
     private String name;
     private Category category;
     private List<Topic> topic;
-    private int mentions;
+    private Integer mentions;
+    private List<String> keywords;
 
-    public NamedEntity(String name, Category category, List<Topic> topic, int mentions) {
+    public NamedEntity(String name, Category category, List<Topic> topic, Integer mentions, List<String> keywords) {
         this.name = name;
         this.category = category;
         this.topic = topic;
         this.mentions = mentions;
+        this.keywords = keywords;
     }
 
     public String getName() {
@@ -35,4 +37,11 @@ public class NamedEntity implements Serializable {
         return mentions;
     }
 
+    public void setMentions(int mentions){
+         this.mentions = mentions;
+    }
+
+    public List<String> getKeywords (){
+        return keywords;
+    }
 }
