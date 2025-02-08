@@ -9,8 +9,6 @@ import namedEntities.Classification.Topic;
 public class Stats {
     
     public void  getStatsByCategory(List<NamedEntity> namedEntities){
-        //debería añadir un counter a named entity porque sino se hace un lío sacar el total acá ...
-        //modificar para que el arreglo de entidades no se recorra todo para cada cat/topic
         List<NamedEntity> localEntities = new ArrayList<>(namedEntities);
 
         for (Category category: Category.values()){
