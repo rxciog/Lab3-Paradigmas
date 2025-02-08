@@ -7,5 +7,8 @@ public enum Topic {
     HEALTH,
     TECHNOLOGY,
     CULTURE,
+    ECONOMICS,
+    BUSINESS,
+    ENTERTAINMENT,
     OTHER;
 }

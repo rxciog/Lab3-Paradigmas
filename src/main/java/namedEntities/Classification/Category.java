@@ -4,5 +4,6 @@ public enum Category {
     PERSON,
     LOCATION,
     ORGANIZATION,
+    EVENT,
     OTHER;
 }
