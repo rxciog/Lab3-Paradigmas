@@ -40,56 +40,44 @@ public class App {
         run(config, feedsDataArray);
     }
 
-    // TODO: Change the signature of this function if needed
-    // TODO: Modularizar 
     private static void run(Config config, List<FeedsData> feedsDataArray) {
 
-        List<String> feedList = new ArrayList<>();
-        List<Article> allArticles = new ArrayList<>();
-        
         if (feedsDataArray == null || feedsDataArray.size() == 0) {
-            System.out.println("No feeds data found");
+            System.out.println("No se encontraron feeds");
             return;
         }
         if (config.getHelp()){
             ui.printHelp(feedsDataArray);
             return;
         }
-        // Get feed URL
-        feedList = extractURL(config, feedsDataArray);
 
-        // TODO: Populate allArticles with articles from corresponding feeds
-        allArticles = getAllArticles(feedList);
-        
-        // TODO: Print the fetched feed
-        if (config.getPrintFeed()) {
-            System.out.println("Printing feed(s) ");
-            for (Article article : allArticles) {
-                article.print();
-            }
+        // Guardamos en allArticles los artículos de los feeds correspondientes
+        List<String> feedList = extractURL(config, feedsDataArray);
+        if (feedList.isEmpty()){
+            System.out.println("No se encontró el feed especificado... ");
+            return;
         }
-        //Creamos el punto de entrada para poder usar la API
-        SparkSession spark = SparkSession
-        .builder()
-        .appName("App")
-        .getOrCreate();
+        List<Article> allArticles = getAllArticles(feedList);
 
-        //Creamos archivo con todos los articulos de los feeds seleccionados
-        String path = "./src/main/resources/bigData.txt";
-        //maybe add try catch in case of IOExcpt
-        createFeedFile(allArticles, path);
+        if (config.getPrintFeed()) {printFeed(allArticles);}
 
-        JavaRDD<String> articles = spark.read().textFile(path).javaRDD();
+        //Creamos el punto de entrada para poder usar la API de Spark
+        SparkSession spark = SparkSession.builder().appName("NER&Classification").getOrCreate();
+
+        JavaRDD<String> articles = loadArticles(allArticles, spark);
 
         if (config.getComputeNamedEntities()) {
-            JavaRDD<String> namedEntities = computeNamedEntities(articles, config.getHeuristic());
-            computeStats(namedEntities, config.getStats());
+            JavaRDD<String> namedEntities = computeNamedEntities(articles, config.getHeuristic(), spark);
+            List<NamedEntity> entitiesList = computeStats(namedEntities, spark);
+            printStats(entitiesList, config.getStats());
         }
+
+        spark.close();
     }
 
     private static List<String> extractURL (Config config, List<FeedsData> feedsDataArray) {
-        
         List<String> urList = new ArrayList<>();
+
         if (!config.getFeedKey().equals("All")) {
             for (FeedsData feed : feedsDataArray){
                 if (feed.getLabel().equals(config.getFeedKey())){
@@ -121,20 +109,32 @@ public class App {
         return allArticles;
     }
 
-    private static JavaRDD<String> computeNamedEntities (JavaRDD<String> allArticles, String heuristicName){
+    private static void printFeed(List<Article> allArticles){
+        System.out.println("Printing feed(s): ");
+        for (Article article : allArticles) {
+            article.print();
+        }
+    }
+
+    private static JavaRDD<String> loadArticles(List<Article> allArticles, SparkSession spark){
+        String path = "./src/main/resources/bigData.txt";
+        createFeedFile(allArticles, path);
+        JavaRDD<String> articles = spark.read().textFile("./src/main/resources/wiki_dump_parcial.txt").javaRDD();
+        //JavaRDD<String> articles = spark.read().textFile(path).javaRDD();
+        return articles;
+    }
+
+    private static JavaRDD<String> computeNamedEntities (JavaRDD<String> allArticles, String heuristicName, SparkSession spark){
         // TODO: complete the message with the selected heuristic name
         System.out.println("Computing named entities using " + heuristicName);
         JavaRDD<String> namedEntities = null;
 
         try {
-            //Asegurarse que spark no intente serializar heuristic -> la creamos en cada tarea ejecutada por los workers.
-            //Spark necesita serializar cq obj usado dentro de un RDD transformado para enviarlo a los workers
-            // serializar: convertir un obj en una secuencia de bytes para que pueda ser almacenada o transmitida y luego reconstruida
             Heuristic heuristic = HeuristicFactory.createHeuristic(heuristicName);
             namedEntities = allArticles.flatMap(a -> heuristic.extractCandidates(a).iterator());
                                         
         } catch (IllegalArgumentException e ){
-            ui.printHeuristicErrorMssg();
+            ui.printHeuristicHelpMssg();
             System.exit(1);
         }
         return namedEntities; 
@@ -152,13 +152,17 @@ public class App {
         }
     }
 
-    private static void computeStats(JavaRDD<String> namedEntities, String statType ){
+    private static List<NamedEntity> computeStats(JavaRDD<String> namedEntities, SparkSession spark){
         // TODO: compute named entities using the selected heuristic
         System.out.println("Computing stats on named entities...");
 
-        Classifier assigner = new Classifier();
-        List<NamedEntity> entities = namedEntities.mapPartitions(partition -> 
-                assigner.classifyEntities(partition).iterator()).collect();
+        Classifier classifier = new Classifier();
+        List<NamedEntity> entities = classifier.runClassifier(namedEntities, spark);
+
+        return entities;
+    }
+
+    private static void printStats(List<NamedEntity> entities, String statType ){
         // TODO: Print stats
         System.out.println("\nStats: ");
         if ( statType.contentEquals("top")){
