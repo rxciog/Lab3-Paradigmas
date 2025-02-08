@@ -15,6 +15,10 @@ import java.util.stream.Collectors;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import namedEntities.NamedEntity;
+import namedEntities.Classification.Category;
+import namedEntities.Classification.Topic;
+
 public class JSONParser {
 
     static public List<FeedsData> parseJsonFeedsData(String jsonFilePath) throws IOException {
@@ -44,4 +48,35 @@ public class JSONParser {
         return list;
     }
 
+    static public List<NamedEntity> parseJsonDict(String filepath) throws IOException {
+        InputStream inputStream = JSONParser.class.getResourceAsStream(filepath);
+
+        String jsonData = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
+        JSONArray jsonArray = new JSONArray(jsonData);
+        List<NamedEntity> dict = new ArrayList<>();
+
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+            String label = jsonObject.getString("label");
+            Category category = Category.valueOf(jsonObject.getString("Category"));
+
+            JSONArray array = jsonObject.getJSONArray("Topics");
+            List<Topic> topics = new ArrayList<>();
+            for (int j = 0; j < array.length(); j++){
+                topics.add(Topic.valueOf(array.getString(j)));
+            }
+
+            array = jsonObject.getJSONArray("keywords");
+            List<String> keywords = new ArrayList<>();
+            for (int j = 0; j < array.length(); j++){
+                keywords.add(array.getString(j));
+            }
+
+            dict.add(new NamedEntity(label, category, topics, 1, keywords));
+
+        }
+
+        return dict;
+    }
 }
