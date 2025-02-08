@@ -40,14 +40,13 @@ public class UserInterface {
                 }
             }
         }
-        // 1
         Boolean help = optionDict.containsKey("-h");
         Boolean printFeed = optionDict.containsKey("-pf");
         Boolean computeNamedEntities = optionDict.containsKey("-ne");
-        // TODO: use value for heuristic config
-        String heuristic = (computeNamedEntities) ? getHeuristic() : "None";
+        // 
+        String heuristic = (computeNamedEntities) ? getHeuristic() : "capital";
         String feedKey = (optionDict.get("-f") == null ) ? "All" : optionDict.get("-f");
-        String stats = (optionDict.get("-sf") == null) ? "None" : optionDict.get("-sf");
+        String stats = (optionDict.get("-sf") == null) ? "cat" : optionDict.get("-sf");
 
 
         if (!computeNamedEntities && !printFeed) printFeed = true;
@@ -59,7 +58,7 @@ public class UserInterface {
         String heuristicName = optionDict.get("-ne");
 
         if (!HeuristicFactory.getAvailableHeuristics().contains(heuristicName)){
-            printHeuristicErrorMssg();
+            printHeuristicHelpMssg();
             System.exit(1);
         }
 
@@ -77,7 +76,7 @@ public class UserInterface {
         for (FeedsData feedData : feedsDataArray) {
             System.out.println("                                       " + feedData.getLabel());
         }
-        printHeuristicErrorMssg();
+        printHeuristicHelpMssg();
         System.out.println("  -pf, --print-feed:                   Print the fetched feed");
         System.out.println("  -sf, --stats-format <format>:        Print the stats in the specified format");
         System.out.println("                                       Available formats are: ");
@@ -85,7 +84,7 @@ public class UserInterface {
         System.out.println("                                       topic: Topic-wise stats");
     }
 
-    public void printHeuristicErrorMssg() {
+    public void printHeuristicHelpMssg() {
 
         System.out.println("  -ne, --named-entity                 : Use the specified heuristic to extract");
         System.out.println("                                       named entities");
@@ -95,4 +94,5 @@ public class UserInterface {
         System.out.println("                                       coreNLP: <description>");
 
     }
+
 }
