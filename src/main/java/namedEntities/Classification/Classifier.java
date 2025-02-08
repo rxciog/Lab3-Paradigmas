@@ -1,117 +1,74 @@
 package namedEntities.Classification;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 
+import utils.JSONParser;
 import namedEntities.NamedEntity;
+import scala.Tuple2;
 
 public class Classifier implements Serializable {
     
-    public List<NamedEntity> classifyEntities(Iterator<String> entities){
-
-        List<NamedEntity> namedEntities = new ArrayList<>();
-        List<String> entitiesList = new ArrayList<>();
-        entities.forEachRemaining(entitiesList::add);
-        Set<String> entitiesSet = new HashSet<String>(entitiesList);
-
-        for (String entity: entitiesSet){
-
-            Category[] categories = Category.values();
-            Category category = Category.valueOf(getInputLabel(entity, categories));
-
-            Topic[] topics = Topic.values();
-            Topic topic = Topic.valueOf(getInputLabel(entity, topics));
-            
-            int mentions = Collections.frequency(entitiesList, entity);
-
-            NamedEntity ne = new NamedEntity(entity, category, List.of(topic), mentions);
-            namedEntities.add(ne);
-        }
-
-
-        return namedEntities;
-    }
-
-    private String fetchAPIResponse(String entity, Object[] options) throws MalformedURLException, IOException, Exception {
-        String response = "";
-        int retryCount = 5;
-        int retryDelay = 2000;
-
-        for (int attempt = 0 ; attempt < retryCount; attempt++){
-            String hf_api_key = System.getenv("HF_API_KEY");
-            URL url = new URL("https://api-inference.huggingface.co/models/MoritzLaurer/mDeBERTa-v3-base-mnli-xnli");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Authorization", "Bearer "+ hf_api_key);
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(50000);
-
-            List<String> strOptions = Arrays.stream(options).map(String::valueOf).collect(Collectors.toList());
-
-            JSONObject json = new JSONObject();
-            json.put("inputs", entity);
-            json.put("parameters", new JSONObject().put("candidate_labels", new JSONArray(strOptions)));
-
-            connection.setDoOutput(true);
-            try (OutputStream os = connection.getOutputStream()){
-                byte[] input = json.toString().getBytes("utf-8");
-                os.write(input,0, input.length);
-            }
-
-            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK){
-                try (InputStream is = connection.getInputStream()){
-                    response = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-                }
-                return response;
-            } else if (connection.getResponseCode() == HttpURLConnection.HTTP_UNAVAILABLE){
-                Thread.sleep(retryDelay);
-            } else {
-                throw new Exception("HTTP error code: " + connection.getResponseCode() + connection.getResponseMessage());
-            }
-
-            
-        }
-        throw new Exception("All attempts failed ");
-
-    }
-
-    private String getInputLabel(String input, Object[] options){
-        String label, response = new String();
+    public List<NamedEntity> runClassifier(JavaRDD<String> entities, SparkSession spark){
+        List<NamedEntity> result = new ArrayList<>();
+        List<NamedEntity> entitiesInDict = new ArrayList<>();
 
         try {
-            response = fetchAPIResponse(input, options);
-            
-        } catch (Exception e){
-            System.out.println("Exception occurred: "+ e.getMessage());
-            System.out.println("Exiting ...");
+            entitiesInDict = JSONParser.parseJsonDict("/data/dictionary.json");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
             System.exit(1);
         }
+        JavaPairRDD<String, Integer> ones = entities.mapToPair(s -> new Tuple2<>(s, 1));
+        JavaPairRDD<String, Integer> countedEntities = ones.reduceByKey((i1, i2) -> i1 + i2);
 
-        JSONObject jsonResponse = new JSONObject(response);
-        JSONArray labels = jsonResponse.getJSONArray("labels");
+        JavaSparkContext jsc = new JavaSparkContext(spark.sparkContext());
+        Broadcast<List<NamedEntity>> broadcastDict = jsc.broadcast(entitiesInDict);
 
-        label = labels.getString(0);
+        result = countedEntities.mapPartitions(partition -> {
+                return classifyEntities(partition, broadcastDict.value()).iterator();
+            }).collect();
 
-        return label;
+        
+        jsc.close();
+        return result;
     }
 
+    private static List<NamedEntity>  classifyEntities (Iterator<Tuple2<String, Integer>> entities, List<NamedEntity> entitiesInDict){
+        List<NamedEntity> result = new ArrayList<>();
+        List<Tuple2<String, Integer>> entitiesList = new ArrayList<>();
+        entities.forEachRemaining(entitiesList::add);
+
+        // Distributed: classify list of entities
+        boolean added = false;
+        // Classify each entity
+        for (Tuple2<String, Integer> entity: entitiesList){
+            for (NamedEntity ne: entitiesInDict){
+                if (ne.getKeywords().contains(entity._1())){
+                    ne.setMentions(entity._2());
+                    result.add(ne);
+                    added = true;
+                    break;
+                }
+            }
+            if (!added){
+                result.add(new NamedEntity(entity._1(), Category.OTHER, List.of(Topic.OTHER), entity._2(), List.of(entity._1()) ));
+            }
+            added = false;
+        }
+
+        return result;
+
+    }
+
+    
 }
