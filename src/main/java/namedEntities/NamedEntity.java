@@ -6,7 +6,7 @@ import java.util.List;
 import namedEntities.Classification.Category;
 import namedEntities.Classification.Topic;
 
-public class NamedEntity implements Serializable {
+public abstract class NamedEntity implements Serializable {
     private String name;
     private Category category;
     private List<Topic> topic;

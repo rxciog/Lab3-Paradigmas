@@ -1,11 +1,17 @@
 package namedEntities;
 
-public class Person {
+import java.util.List;
+
+import namedEntities.Classification.Category;
+import namedEntities.Classification.Topic;
+
+public class Person extends NamedEntity{
     private String name;
     private int age;
     private String pob;
 
-    public Person(String name, int age, String pob) {
+    public Person(String name, Category category, List<Topic> topic, int mentions,List<String> keywords, int age, String pob) {
+        super(name, category, topic, mentions,keywords);
         this.name = name;
         this.age = age;
         this.pob = pob;
