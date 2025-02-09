@@ -18,6 +18,7 @@ import org.json.JSONObject;
 import namedEntities.NamedEntity;
 import namedEntities.Classification.Category;
 import namedEntities.Classification.Topic;
+import namedEntities.NamedEntityFactory;
 
 public class JSONParser {
 
@@ -73,7 +74,7 @@ public class JSONParser {
                 keywords.add(array.getString(j));
             }
 
-            dict.add(new NamedEntity(label, category, topics, 1, keywords));
+            dict.add(NamedEntityFactory.createNamedEntity(label, category, topics, 1, keywords));
 
         }
 

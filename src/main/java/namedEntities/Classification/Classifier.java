@@ -1,7 +1,6 @@
 package namedEntities.Classification;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -14,6 +13,7 @@ import org.apache.spark.broadcast.Broadcast;
 
 import utils.JSONParser;
 import namedEntities.NamedEntity;
+import namedEntities.NamedEntityFactory;
 import scala.Tuple2;
 
 public class Classifier implements Serializable {
@@ -61,7 +61,7 @@ public class Classifier implements Serializable {
                 }
             }
             if (!added){
-                result.add(new NamedEntity(entity._1(), Category.OTHER, List.of(Topic.OTHER), entity._2(), List.of(entity._1()) ));
+                result.add(NamedEntityFactory.createNamedEntity(entity._1(), Category.OTHER, List.of(Topic.OTHER), entity._2(), List.of(entity._1()) ));
             }
             added = false;
         }
