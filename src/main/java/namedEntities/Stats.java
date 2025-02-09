@@ -25,7 +25,7 @@ public class Stats {
         List<NamedEntity> localEntities = new ArrayList<>(namedEntities);
 
         for (Topic topic: Topic.values()){
-            System.out.println("Category: " + topic.toString());
+            System.out.println("Topic: " + topic.toString());
             for (NamedEntity ne: localEntities){
                 if (ne.getTopic().contains(topic)){
                     System.out.println("\t" + ne.getName() + "(" + ne.getMentions() + ")");
