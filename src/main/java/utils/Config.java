@@ -1,15 +1,18 @@
 package utils;
 
+import feed.FeedType;
+import namedEntities.heuristics.HeuristicType;
+import namedEntities.stats.StatsFormat;
+
 public class Config {
     private boolean printFeed = false;
     private boolean computeNamedEntities = false;
-    private String feedKey;
+    private FeedType feedKey;
     private boolean help = false;
-    // TODO: A reference to the used heuristic will be needed here
-    private String heuristic;
-    private String stats;
+    private HeuristicType heuristic;
+    private StatsFormat stats;
 
-    public Config(boolean help, boolean printFeed, boolean computeNamedEntities, String feedKey, String heuristic, String stats) {
+    public Config(boolean help, boolean printFeed, boolean computeNamedEntities, FeedType feedKey, HeuristicType heuristic, StatsFormat stats) {
         this.help = help;
         this.printFeed = printFeed;
         this.computeNamedEntities = computeNamedEntities;
@@ -30,15 +33,15 @@ public class Config {
         return computeNamedEntities;
     }
 
-    public String getFeedKey() {
+    public FeedType getFeedKey() {
         return feedKey;
     }
 
-    public String getHeuristic() {
+    public HeuristicType getHeuristic() {
         return heuristic;
     }
 
-    public String getStats() {
+    public StatsFormat getStats() {
         return stats;
     }
 }
