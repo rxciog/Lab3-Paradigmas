@@ -38,7 +38,12 @@ public class JSONParser {
     }
 
     static public Set<String> parseJsonList(InputStream inputStream) throws IOException {
-        String jsonData = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
+        String jsonData = "";
+        try ( BufferedReader buffer = new BufferedReader(new InputStreamReader(inputStream))){
+            jsonData = buffer.lines().collect(Collectors.joining("\n"));
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
         Set<String> list = new HashSet<>();
 
         JSONArray jsonArray = new JSONArray(jsonData);
@@ -51,8 +56,13 @@ public class JSONParser {
 
     static public List<NamedEntity> parseJsonDict(String filepath) throws IOException {
         InputStream inputStream = JSONParser.class.getResourceAsStream(filepath);
-
-        String jsonData = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
+        String jsonData = "";
+        
+        try ( BufferedReader buffer = new BufferedReader(new InputStreamReader(inputStream))){
+            jsonData = buffer.lines().collect(Collectors.joining("\n"));
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
         JSONArray jsonArray = new JSONArray(jsonData);
         List<NamedEntity> dict = new ArrayList<>();
 
