@@ -18,7 +18,7 @@ import scala.Tuple2;
 
 public class Classifier implements Serializable {
     
-    public List<NamedEntity> runClassifier(JavaRDD<String> entities, SparkSession spark){
+    public static List<NamedEntity> classifyEntitiesWithSpark(JavaRDD<String> entities, SparkSession spark){
         List<NamedEntity> result = new ArrayList<>();
         List<NamedEntity> entitiesInDict = new ArrayList<>();
 
@@ -48,7 +48,6 @@ public class Classifier implements Serializable {
         List<Tuple2<String, Integer>> entitiesList = new ArrayList<>();
         entities.forEachRemaining(entitiesList::add);
 
-        // Distributed: classify list of entities
         boolean added = false;
         // Classify each entity
         for (Tuple2<String, Integer> entity: entitiesList){
