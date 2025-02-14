@@ -11,10 +11,13 @@ import org.apache.spark.sql.SparkSession;
 
 import feed.Article;
 import feed.FeedParser;
+import feed.FeedType;
 import namedEntities.heuristics.Heuristic;
 import namedEntities.heuristics.HeuristicFactory;
+import namedEntities.heuristics.HeuristicType;
+import namedEntities.stats.Stats;
+import namedEntities.stats.StatsFormat;
 import namedEntities.NamedEntity;
-import namedEntities.Stats;
 import namedEntities.Classification.Classifier;
 import utils.Config;
 import utils.FeedsData;
@@ -35,9 +38,15 @@ public class App {
             System.exit(1);
         }
 
-        Config config = ui.handleInput(args);
+        try {
+            Config config = ui.handleInput(args);
+            run(config, feedsDataArray);
+        } catch (IllegalArgumentException e){
+            System.err.println(e.getMessage());
+            UserInterface.printHelp(feedsDataArray);
+            System.exit(1);
+        }
 
-        run(config, feedsDataArray);
     }
 
     private static void run(Config config, List<FeedsData> feedsDataArray) {
@@ -47,7 +56,7 @@ public class App {
             return;
         }
         if (config.getHelp()){
-            ui.printHelp(feedsDataArray);
+            UserInterface.printHelp(feedsDataArray);
             return;
         }
 
@@ -78,9 +87,9 @@ public class App {
     private static List<String> extractURL (Config config, List<FeedsData> feedsDataArray) {
         List<String> urList = new ArrayList<>();
 
-        if (!config.getFeedKey().equals("All")) {
+        if (!config.getFeedKey().equals(FeedType.ALL)) {
             for (FeedsData feed : feedsDataArray){
-                if (feed.getLabel().equals(config.getFeedKey())){
+                if (feed.getLabel().equals(config.getFeedKey().getValue())){
                     urList.add(feed.getUrl());
                     break;
                 } 
@@ -124,7 +133,7 @@ public class App {
         return articles;
     }
 
-    private static JavaRDD<String> computeNamedEntities (JavaRDD<String> allArticles, String heuristicName, SparkSession spark){
+    private static JavaRDD<String> computeNamedEntities (JavaRDD<String> allArticles, HeuristicType heuristicName, SparkSession spark){
         // TODO: complete the message with the selected heuristic name
         System.out.println("Computing named entities using " + heuristicName);
         JavaRDD<String> namedEntities = null;
@@ -134,7 +143,7 @@ public class App {
             namedEntities = allArticles.flatMap(a -> heuristic.extractCandidates(a).iterator());
                                         
         } catch (IllegalArgumentException e ){
-            ui.printHeuristicHelpMssg();
+            UserInterface.printHeuristicHelpMssg();
             System.exit(1);
         }
         return namedEntities; 
@@ -156,19 +165,18 @@ public class App {
         // TODO: compute named entities using the selected heuristic
         System.out.println("Computing stats on named entities...");
 
-        Classifier classifier = new Classifier();
-        List<NamedEntity> entities = classifier.runClassifier(namedEntities, spark);
+        List<NamedEntity> entities = Classifier.classifyEntitiesWithSpark(namedEntities, spark);
 
         return entities;
     }
 
-    private static void printStats(List<NamedEntity> entities, String statType ){
+    private static void printStats(List<NamedEntity> entities, StatsFormat statType ){
         // TODO: Print stats
         System.out.println("\nStats: ");
-        if ( statType.contentEquals("top")){
+        if ( statType.equals(StatsFormat.TOP)){
             stat.getStatsByTopic(entities);
         } else {
-            if (!statType.contentEquals("cat")) System.out.println("Defaulting to stats by category ...");
+            if (!statType.equals(StatsFormat.CAT)) System.out.println("Defaulting to stats by category ...");
             stat.getStatsByCategory(entities);
         }
         System.out.println("-".repeat(80));
