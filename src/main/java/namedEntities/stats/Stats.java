@@ -1,8 +1,9 @@
-package namedEntities;
+package namedEntities.stats;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import namedEntities.NamedEntity;
 import namedEntities.Classification.Category;
 import namedEntities.Classification.Topic;
 
