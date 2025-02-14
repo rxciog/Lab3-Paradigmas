@@ -24,6 +24,6 @@ public class Article {
     }
 
     public String toString() {
-        return title + "\n" + description + "\n";
+        return title + "\n" + description + ".\n";
     }
 }
