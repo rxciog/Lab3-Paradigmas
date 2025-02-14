@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import namedEntities.heuristics.HeuristicFactory;
+import feed.FeedType;
+import namedEntities.heuristics.HeuristicType;
+import namedEntities.stats.StatsFormat;
 
 public class UserInterface {
 
@@ -23,76 +25,125 @@ public class UserInterface {
         optionDict = new HashMap<String, String>();
     }
 
-    public Config handleInput(String[] args) {
+    public Config handleInput(String[] args) throws IllegalArgumentException {
 
         for (Integer i = 0; i < args.length; i++) {
+            boolean valid = false;
             for (Option option : options) {
                 if (option.getName().equals(args[i]) || option.getLongName().equals(args[i])) {
+                    valid = true;
                     if (option.getnumValues() == 0) {
                         optionDict.put(option.getName(), null);
                     } else {
                         if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
                             optionDict.put(option.getName(), args[i + 1]);
                             i++;
-                        } 
-                        
+                        }
                     }
+                    break;
                 }
             }
+            if (!valid) {
+                throw new IllegalArgumentException("Invalid option: " + args[i]);
+            }
         }
+        if (optionDict.isEmpty()){
+            throw new IllegalArgumentException("No valid arguments provided.");
+        }
+
         Boolean help = optionDict.containsKey("-h");
         Boolean printFeed = optionDict.containsKey("-pf");
         Boolean computeNamedEntities = optionDict.containsKey("-ne");
-        // 
-        String heuristic = (computeNamedEntities) ? getHeuristic() : "capital";
-        String feedKey = (optionDict.get("-f") == null ) ? "All" : optionDict.get("-f");
-        String stats = (optionDict.get("-sf") == null) ? "cat" : optionDict.get("-sf");
 
+        if (!computeNamedEntities && optionDict.containsKey("-sf") ) throw new IllegalArgumentException("Stats format specified without named entities computation.");
+        
+        HeuristicType heuristic = (computeNamedEntities) ? getHeuristic(optionDict.get("-ne")) : HeuristicType.NONE;
+        FeedType feedKey = (optionDict.get("-f") == null ) ? FeedType.ALL : getFeedKey(optionDict.get("-f"));
+        StatsFormat stats = (optionDict.get("-sf") == null) ?  StatsFormat.NONE: getStatForm(optionDict.get("-sf"));
 
         if (!computeNamedEntities && !printFeed) printFeed = true;
 
         return new Config(help , printFeed, computeNamedEntities, feedKey, heuristic, stats);
     }
 
-    private String getHeuristic(){
-        String heuristicName = optionDict.get("-ne");
 
-        if (!HeuristicFactory.getAvailableHeuristics().contains(heuristicName)){
+    private static HeuristicType getHeuristic(String heuristicName){
+        HeuristicType heuristic = HeuristicType.NONE;
+
+        try {
+            heuristic = HeuristicType.fromString(heuristicName);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Wrong heuristic name");
             printHeuristicHelpMssg();
             System.exit(1);
         }
-
-        return heuristicName;
+        return heuristic;
     }
 
+    private static FeedType getFeedKey(String feedName){
+        FeedType feedKey = FeedType.ALL;
 
-    public void printHelp(List<FeedsData> feedsDataArray) {
+        try {
+            feedKey = FeedType.fromString(feedName);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Wrong feed name: " +feedName + ", use -h for help");
+            System.exit(1);
+        }
+        return feedKey;
+    }
+
+    private static StatsFormat getStatForm(String statName){
+        StatsFormat statsFormat = StatsFormat.NONE;
+
+        try {
+            statsFormat = StatsFormat.valueOf(statName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Wrong stats name, use -h for help");
+            System.exit(1);
+        }
+        return statsFormat;
+    }
+
+    public static void printHelp(List<FeedsData> feedsDataArray) {
         System.out.println("Usage: make run ARGS=\"[OPTION]\"");
         System.out.println("Options:");
         System.out.println("  -h, --help: Show this help message and exit");
+        printFeedHelpMssg(feedsDataArray);
+        printHeuristicHelpMssg();
+        System.out.println("  -pf, --print-feed:                   Print the fetched feed");
+        printStatsHelpMssg();
+        
+    }
+
+    public static void printHeuristicHelpMssg() {
+        System.out.println("  -ne, --named-entity                 : Use the specified heuristic to extract");
+        System.out.println("                                       named entities");
+        System.out.println("                                       Available heuristic names are: ");
+        for (HeuristicType hType: HeuristicType.values()) {
+            System.out.println("                                       " + hType.getValue() + 
+                                ":" + hType.getDescription()
+                              );
+        }
+
+    }
+
+    public static void printFeedHelpMssg(List<FeedsData> feedsDataArray) {
         System.out.println("  -f, --feed <feedKey>:                Fetch and process the feed with");
         System.out.println("                                       the specified key");
         System.out.println("                                       Available feed keys are: ");
         for (FeedsData feedData : feedsDataArray) {
             System.out.println("                                       " + feedData.getLabel());
         }
-        printHeuristicHelpMssg();
-        System.out.println("  -pf, --print-feed:                   Print the fetched feed");
-        System.out.println("  -sf, --stats-format <format>:        Print the stats in the specified format");
-        System.out.println("                                       Available formats are: ");
-        System.out.println("                                       cat: Category-wise stats");
-        System.out.println("                                       topic: Topic-wise stats");
     }
 
-    public void printHeuristicHelpMssg() {
-
-        System.out.println("  -ne, --named-entity                 : Use the specified heuristic to extract");
-        System.out.println("                                       named entities");
-        System.out.println("                                       Available heuristic names are: ");
-        System.out.println("                                       capital: <description>");
-        System.out.println("                                       +capital: <description>");
-        System.out.println("                                       coreNLP: <description>");
-
+    public static void printStatsHelpMssg() {
+        System.out.println("  -sf, --stats-format <format>:        Print the stats in the specified format");
+        System.out.println("                                       Available formats are: ");
+        for (StatsFormat sFormat: StatsFormat.values()) {
+            System.out.println("                                       " + sFormat.getValue() + 
+                                ":" + sFormat.getDescription()
+                              );
+        }
     }
 
 }
