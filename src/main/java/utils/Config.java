@@ -1,5 +1,7 @@
 package utils;
 
+import java.util.Optional;
+
 import feed.FeedType;
 import namedEntities.heuristics.HeuristicType;
 import namedEntities.stats.StatsFormat;
@@ -9,10 +11,12 @@ public class Config {
     private boolean computeNamedEntities = false;
     private FeedType feedKey;
     private boolean help = false;
-    private HeuristicType heuristic;
-    private StatsFormat stats;
+    private Optional<HeuristicType> heuristic;
+    private Optional<StatsFormat> stats;
 
-    public Config(boolean help, boolean printFeed, boolean computeNamedEntities, FeedType feedKey, HeuristicType heuristic, StatsFormat stats) {
+    public Config(boolean help, boolean printFeed, boolean computeNamedEntities, FeedType feedKey,
+                  Optional<HeuristicType> heuristic, Optional<StatsFormat> stats
+                 ){
         this.help = help;
         this.printFeed = printFeed;
         this.computeNamedEntities = computeNamedEntities;
@@ -37,11 +41,11 @@ public class Config {
         return feedKey;
     }
 
-    public HeuristicType getHeuristic() {
+    public Optional<HeuristicType> getHeuristic() {
         return heuristic;
     }
 
-    public StatsFormat getStats() {
+    public Optional<StatsFormat> getStats() {
         return stats;
     }
 }

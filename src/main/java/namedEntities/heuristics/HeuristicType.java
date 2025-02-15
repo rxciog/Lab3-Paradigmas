@@ -4,8 +4,7 @@ public enum HeuristicType {
     CAPITAL("capital", "Capitalized words are recognized as named entities"),
     PLUS_CAPITAL("+capital", "Capitalized words who are not stopwords are recognized as named entities"),
     CORE_NLP("coreNLP","Use CoreNLP pipeline for NER, most precise heuristic."),
-    PREFIX("prefix", "Recognizes named entities with prefixes (Gobierno de ..., Lic. , Rio ...)"),
-    NONE("none","none");
+    PREFIX("prefix", "Recognizes named entities with prefixes (Gobierno de ..., Lic. , Rio ...)");
 
     private final String value;
     private final String description;
@@ -27,6 +26,7 @@ public enum HeuristicType {
     public String getValue(){
         return value;
     }
+
     public String getDescription(){
         return description;
     }

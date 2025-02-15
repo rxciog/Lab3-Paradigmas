@@ -2,8 +2,7 @@ package namedEntities.stats;
 
 public enum StatsFormat {
     CAT("cat","Category-wise stats"),
-    TOP("top", "Topic-wise stats"),
-    NONE("none","none");
+    TOP("top", "Topic-wise stats");
 
     private final String value;
     private final String description;
