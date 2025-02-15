@@ -3,6 +3,7 @@ package utils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import feed.FeedType;
 import namedEntities.heuristics.HeuristicType;
@@ -55,11 +56,14 @@ public class UserInterface {
         Boolean printFeed = optionDict.containsKey("-pf");
         Boolean computeNamedEntities = optionDict.containsKey("-ne");
 
+        // si pasamos -sf sin -ne es un error de input
         if (!computeNamedEntities && optionDict.containsKey("-sf") ) throw new IllegalArgumentException("Stats format specified without named entities computation.");
         
-        HeuristicType heuristic = (computeNamedEntities) ? getHeuristic(optionDict.get("-ne")) : HeuristicType.NONE;
+        Optional<HeuristicType> heuristic = (computeNamedEntities) ? getHeuristic(optionDict.get("-ne")) : Optional.empty();
         FeedType feedKey = (optionDict.get("-f") == null ) ? FeedType.ALL : getFeedKey(optionDict.get("-f"));
-        StatsFormat stats = (optionDict.get("-sf") == null) ?  StatsFormat.NONE: getStatForm(optionDict.get("-sf"));
+
+        //stats por default es cat
+        Optional<StatsFormat> stats = (optionDict.get("-sf") == null) ?  Optional.of(StatsFormat.CAT): getStatForm(optionDict.get("-sf"));
 
         if (!computeNamedEntities && !printFeed) printFeed = true;
 
@@ -67,11 +71,11 @@ public class UserInterface {
     }
 
 
-    private static HeuristicType getHeuristic(String heuristicName){
-        HeuristicType heuristic = HeuristicType.NONE;
+    private static Optional<HeuristicType> getHeuristic(String heuristicName){
+        Optional<HeuristicType> heuristic = Optional.empty();
 
         try {
-            heuristic = HeuristicType.fromString(heuristicName);
+            heuristic = Optional.of(HeuristicType.fromString(heuristicName));
         } catch (IllegalArgumentException e) {
             System.out.println("Wrong heuristic name");
             printHeuristicHelpMssg();
@@ -92,11 +96,11 @@ public class UserInterface {
         return feedKey;
     }
 
-    private static StatsFormat getStatForm(String statName){
-        StatsFormat statsFormat = StatsFormat.NONE;
+    private static Optional<StatsFormat>  getStatForm(String statName){
+        Optional<StatsFormat>  statsFormat = Optional.empty();
 
         try {
-            statsFormat = StatsFormat.valueOf(statName.toUpperCase());
+            statsFormat = Optional.of(StatsFormat.valueOf(statName.toUpperCase()));
         } catch (IllegalArgumentException e) {
             System.out.println("Wrong stats name, use -h for help");
             System.exit(1);
