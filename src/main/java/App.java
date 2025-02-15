@@ -12,13 +12,13 @@ import org.apache.spark.sql.SparkSession;
 import feed.Article;
 import feed.FeedParser;
 import feed.FeedType;
+import namedEntities.NamedEntity;
+import namedEntities.Classification.Classifier;
 import namedEntities.heuristics.Heuristic;
 import namedEntities.heuristics.HeuristicFactory;
 import namedEntities.heuristics.HeuristicType;
 import namedEntities.stats.Stats;
 import namedEntities.stats.StatsFormat;
-import namedEntities.NamedEntity;
-import namedEntities.Classification.Classifier;
 import utils.Config;
 import utils.FeedsData;
 import utils.JSONParser;
@@ -70,35 +70,31 @@ public class App {
 
         if (config.getPrintFeed()) {printFeed(allArticles);}
 
-        //Creamos el punto de entrada para poder usar la API de Spark
-        SparkSession spark = SparkSession.builder().appName("NER&Classification").getOrCreate();
 
-        JavaRDD<String> articles = loadArticles(allArticles, spark);
+        if (config.getComputeNamedEntities() && config.getHeuristic().isPresent()) {
+            //Creamos el punto de entrada para poder usar la API de Spark
+            SparkSession spark = SparkSession.builder().appName("NER&Classification").getOrCreate();
+            JavaRDD<String> articles = loadArticles(allArticles, spark);
 
-        if (config.getComputeNamedEntities()) {
-            JavaRDD<String> namedEntities = computeNamedEntities(articles, config.getHeuristic(), spark);
+            JavaRDD<String> namedEntities = computeNamedEntities(articles, config.getHeuristic().get(), spark);
             List<NamedEntity> entitiesList = computeStats(namedEntities, spark);
-            printStats(entitiesList, config.getStats());
+            printStats(entitiesList, config.getStats().get());
+
+            spark.close();
         }
 
-        spark.close();
     }
 
     private static List<String> extractURL (Config config, List<FeedsData> feedsDataArray) {
         List<String> urList = new ArrayList<>();
 
-        if (!config.getFeedKey().equals(FeedType.ALL)) {
-            for (FeedsData feed : feedsDataArray){
-                if (feed.getLabel().equals(config.getFeedKey().getValue())){
-                    urList.add(feed.getUrl());
-                    break;
-                } 
-            }
-        } else {
-            for (FeedsData feed : feedsDataArray){
+        for (FeedsData feed : feedsDataArray){
+            if (feed.getLabel().equals(config.getFeedKey().getValue()) || config.getFeedKey().equals(FeedType.ALL)){
                 urList.add(feed.getUrl());
-            }
+                break;
+            } 
         }
+        
         return urList;
     }
 
