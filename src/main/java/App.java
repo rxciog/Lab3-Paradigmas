@@ -124,8 +124,8 @@ public class App {
     private static JavaRDD<String> loadArticles(List<Article> allArticles, SparkSession spark){
         String path = "./src/main/resources/bigData.txt";
         createFeedFile(allArticles, path);
-        JavaRDD<String> articles = spark.read().textFile("./src/main/resources/wiki_dump_parcial.txt").javaRDD();
-        //JavaRDD<String> articles = spark.read().textFile(path).javaRDD();
+        //JavaRDD<String> articles = spark.read().textFile("./src/main/resources/wiki_dump_parcial.txt").javaRDD();
+        JavaRDD<String> articles = spark.read().textFile(path).javaRDD();
         return articles;
     }
 
