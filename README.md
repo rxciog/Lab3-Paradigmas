@@ -29,7 +29,7 @@ Primero seteamos la cantidad de trabajadores que queremos en nuestro cluster.
 $ export SPARK_WORKER_INSTANCES=2
 ```
 A su vez, podemos especificar su memoria y cores a utilizar:
-Se recomienda usar por lo menos 2G para cada trabajador, de lo contrario no se puede trabajar con CoreNLP (los archivos de los modelos son pesados)
+Se recomienda usar por lo menos 2G para cada trabajador, de lo contrario no se puede trabajar con CoreNLP (los archivos de los modelos son pesados).
 ```bash
 $ export SPARK_WORKER_MEMORY=2G
 $ export SPARK_WORKER_CORES=1
@@ -60,3 +60,6 @@ Detenemos los trabajadores y el master:
 $ $SPARK_HOME/sbin/stop-master.sh
 $ $SPARK_HOME/sbin/stop-worker.sh
 ```
+
+### Trabajar con CoreNLP
+Al utilizar tan solo un trabajador para archivos muy grandes como wiki_dump_parcial pueden ocurrir errores por falta de memoria.
