@@ -14,7 +14,7 @@ public class CoreNLP  implements Heuristic {
 
         Properties props = new  Properties();
         props.setProperty("annotators", "tokenize, ssplit, ner");
-        StanfordCoreNLP pipeline = new StanfordCoreNLP();
+        StanfordCoreNLP pipeline = new StanfordCoreNLP("spanish");
 
         CoreDocument document = new CoreDocument(text);
 
