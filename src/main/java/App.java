@@ -88,11 +88,17 @@ public class App {
     private static List<String> extractURL (Config config, List<FeedsData> feedsDataArray) {
         List<String> urList = new ArrayList<>();
 
-        for (FeedsData feed : feedsDataArray){
-            if (feed.getLabel().equals(config.getFeedKey().getValue()) || config.getFeedKey().equals(FeedType.ALL)){
+        if (!config.getFeedKey().equals(FeedType.ALL)) {
+            for (FeedsData feed : feedsDataArray){
+                if (feed.getLabel().equals(config.getFeedKey().getValue())){
+                    urList.add(feed.getUrl());
+                    break;
+                } 
+            }
+        } else {
+            for (FeedsData feed : feedsDataArray){
                 urList.add(feed.getUrl());
-                break;
-            } 
+            }
         }
         
         return urList;
@@ -124,8 +130,8 @@ public class App {
     private static JavaRDD<String> loadArticles(List<Article> allArticles, SparkSession spark){
         String path = "./src/main/resources/bigData.txt";
         createFeedFile(allArticles, path);
-        //JavaRDD<String> articles = spark.read().textFile("./src/main/resources/wiki_dump_parcial.txt").javaRDD();
-        JavaRDD<String> articles = spark.read().textFile(path).javaRDD();
+        JavaRDD<String> articles = spark.read().textFile("./src/main/resources/wiki_dump_parcial.txt").javaRDD();
+        //JavaRDD<String> articles = spark.read().textFile(path).javaRDD();
         return articles;
     }
 
