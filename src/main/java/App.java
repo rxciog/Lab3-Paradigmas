@@ -130,8 +130,9 @@ public class App {
     private static JavaRDD<String> loadArticles(List<Article> allArticles, SparkSession spark){
         String path = "./src/main/resources/bigData.txt";
         createFeedFile(allArticles, path);
-        JavaRDD<String> articles = spark.read().textFile("./src/main/resources/wiki_dump_parcial.txt").javaRDD();
-        //JavaRDD<String> articles = spark.read().textFile(path).javaRDD();
+        
+        //JavaRDD<String> articles = spark.read().textFile("./src/main/resources/wiki_dump_parcial.txt").javaRDD();
+        JavaRDD<String> articles = spark.read().textFile(path).javaRDD();
         return articles;
     }
 
@@ -142,7 +143,13 @@ public class App {
 
         try {
             Heuristic heuristic = HeuristicFactory.createHeuristic(heuristicName);
-            namedEntities = allArticles.flatMap(a -> heuristic.extractCandidates(a).iterator());
+            namedEntities = allArticles.mapPartitions(iter -> { 
+                List<String> articles = new ArrayList<>();
+                iter.forEachRemaining(articles::add);
+
+                String concat = String.join(" ", articles);
+                return heuristic.extractCandidates(concat).iterator();
+            });
                                         
         } catch (IllegalArgumentException e ){
             UserInterface.printHeuristicHelpMssg();
