@@ -13,20 +13,30 @@ Para ello, se recurrió a la documentación, así como a códigos de ejemplo y o
 También fue útil aprender a utilizar la interfaz gráfica para comprender qué estaba sucediendo en nuestro sistema en un momento dado. Esto facilitó la detección de errores en nuestras tareas gracias a los logs de los trabajadores.  
 
 
-
 # 2. Desempeño con archivos grandes
 Se evalúa el desempeño utilizando el archivo `wiki_dump_parcial.txt` provisto por la cátedra.
 En este caso, se decidió realizar las mediciones usando la heurística *+capital*, ya que no da tantos falsos positivos como *capital*, es más eficiente que la heurística *CoreNLP* y permite identificar más entidades nombradas que *prefix*.
 
+Para leer tal archivo se puede remplazar en App.js la línea 134 por         
+``` 
+JavaRDD<String> articles = spark.read().textFile("./src/main/resources/wiki_dump_parcial.txt").javaRDD(); 
+```
+
+Cores por worker: 1
+
+Memoria por worker: 2G
+
 ### 1 worker
- - Tiempo total: 17min
+ - Tiempo total: ~2.5 min 
 
 ### 2 workers
- - Tiempo total: 8.6min
+ - Tiempo total: ~2.0 min
 
 ### 4 workers:
- - Tiempo total: 6.3min
+ - Tiempo total: ~3.3min
 
+Podemos observar que con un único worker, el tiempo de ejecución fue de aproximadamente 2.5 minutos, mientras que con dos workers se obtuvo la mejor mejora en rendimiento, reduciendo el tiempo a unos 2.0 minutos. Sin embargo, al incrementar a cuatro workers, se nota un aumento inesperado del tiempo de ejecución a ~3.3 minutos. 
+Esto sugiere que, en este caso, el distribuir tareas en más nodos no siempre conduce a una mejora en el rendimiento, posiblemente debido al overhead en la gestión de más trabajadores.
 
 # 3. Extras
 Las siguientes tareas se realizan de forma distribuida (además de la extracción):  
@@ -55,5 +65,10 @@ Además, al analizar un programa de ejemplo para el conteo de palabras, se ident
    - Para cada partición de `countedEntities`, se llama al método de clasificación, compartiendo la variable de *broadcast* para mejorar el rendimiento
 
 
+# 4.Puntos a mejorar
+Se debe resaltar que la implementación del uso de Spark es, en algunos casos, no óptima.  
+Por ejemplo, en la heurística **CoreNLP**, el *Pipeline* se construye en cada tarea, lo cual es muy costoso.  
+Del mismo modo, en la heurística **+capital**, la lista de *stopwords* se lee en cada tarea para filtar los candidatos a entidades nombradas.
+Esto impacta la performance de la aplicación, sobre todo al utilizar alguna de esas dos heurísticas de extracción.
 
-  
+Una forma de mejorar esto es modificar el código para que el *driver* gestione estas actividades y luego comparta los recursos con cada nodo.
