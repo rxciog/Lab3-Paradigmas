@@ -3,7 +3,7 @@
 Pueden ver la consigna del laboratorio en https://docs.google.com/document/d/e/2PACX-1vQn5BpCPQ6jKMN-sz46261Qot82KbDZ1RUx8jNzAN4kBEAq_i97T3R6ZA0_yRA5elN66e-EArXQXuAh/pub
 
 # Preparación del entorno
-- [X] Necesitan Java 17, tanto el JRE como el JDK. En Ubuntu, pueden instalarlo con:
+- [X] Necesita Java 17, tanto el JRE como el JDK. En Ubuntu, pueden instalarlo con:
 
 ```bash
 apt install openjdk-17-jdk openjdk-17-jre
@@ -20,7 +20,7 @@ Sea `APP_HOME` el directorio donde está este archivo `README.md`
 
 ```bash
 $ cd $APP_HOME
-$ mvn package
+$ mvn clean package
 ```
 
 # Cómo usarlo
@@ -34,12 +34,15 @@ Se recomienda usar por lo menos 2G para cada trabajador, de lo contrario no se p
 $ export SPARK_WORKER_MEMORY=2G
 $ export SPARK_WORKER_CORES=1
 ```
-Corremos los trabajadores y el master
+Corremos los trabajadores y el master:
+
+- Reemplazar *spark://your-host:7077* por el URL que aparece en localhost:8080
 ```bash
 $ $SPARK_HOME/sbin/start-master.sh
 $ $SPARK_HOME/sbin/start-worker.sh  spark://your-host:7077
 ```
 Ahora la aplicación
+- Reemplazar *spark://your-host:7077* por el URL que aparece en localhost:8080
 ```bash
 $ $SPARK_HOME/bin/spark-submit --executor-memory 2G  --class App   --master spark://your-host:7077   target/App-0.1-jar-with-dependencies.jar  [ARGS]
 ```
@@ -51,4 +54,9 @@ $ $SPARK_HOME/bin/spark-submit --executor-memory 2G  --class App   --master spar
 Luego de correr el programa hay que eliminar el archivo de la big data:
 ```bash
 $ rm $APP_HOME/src/main/resources/bigData.txt
+```
+Detenemos los trabajadores y el master:
+```bash
+$ $SPARK_HOME/sbin/stop-master.sh
+$ $SPARK_HOME/sbin/stop-worker.sh
 ```
