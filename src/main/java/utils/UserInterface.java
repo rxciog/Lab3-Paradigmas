@@ -48,7 +48,7 @@ public class UserInterface {
                 throw new IllegalArgumentException("Invalid option: " + args[i]);
             }
         }
-        if (optionDict.isEmpty()){
+        if (optionDict.isEmpty()) {
             throw new IllegalArgumentException("No valid arguments provided.");
         }
 
@@ -57,21 +57,24 @@ public class UserInterface {
         Boolean computeNamedEntities = optionDict.containsKey("-ne");
 
         // si pasamos -sf sin -ne es un error de input
-        if (!computeNamedEntities && optionDict.containsKey("-sf") ) throw new IllegalArgumentException("Stats format specified without named entities computation.");
-        
-        Optional<HeuristicType> heuristic = (computeNamedEntities) ? getHeuristic(optionDict.get("-ne")) : Optional.empty();
-        FeedType feedKey = (optionDict.get("-f") == null ) ? FeedType.ALL : getFeedKey(optionDict.get("-f"));
+        if (!computeNamedEntities && optionDict.containsKey("-sf"))
+            throw new IllegalArgumentException("Stats format specified without named entities computation.");
 
-        //stats por default es cat
-        Optional<StatsFormat> stats = (optionDict.get("-sf") == null) ?  Optional.of(StatsFormat.CAT): getStatForm(optionDict.get("-sf"));
+        Optional<HeuristicType> heuristic = (computeNamedEntities) ? getHeuristic(optionDict.get("-ne"))
+                : Optional.empty();
+        FeedType feedKey = (optionDict.get("-f") == null) ? FeedType.ALL : getFeedKey(optionDict.get("-f"));
 
-        if (!computeNamedEntities && !printFeed) printFeed = true;
+        // stats por default es cat
+        Optional<StatsFormat> stats = (optionDict.get("-sf") == null) ? Optional.of(StatsFormat.CAT)
+                : getStatForm(optionDict.get("-sf"));
 
-        return new Config(help , printFeed, computeNamedEntities, feedKey, heuristic, stats);
+        if (!computeNamedEntities && !printFeed)
+            printFeed = true;
+
+        return new Config(help, printFeed, computeNamedEntities, feedKey, heuristic, stats);
     }
 
-
-    private static Optional<HeuristicType> getHeuristic(String heuristicName){
+    private static Optional<HeuristicType> getHeuristic(String heuristicName) {
         Optional<HeuristicType> heuristic = Optional.empty();
 
         try {
@@ -84,20 +87,20 @@ public class UserInterface {
         return heuristic;
     }
 
-    private static FeedType getFeedKey(String feedName){
+    private static FeedType getFeedKey(String feedName) {
         FeedType feedKey = FeedType.ALL;
 
         try {
             feedKey = FeedType.fromString(feedName);
         } catch (IllegalArgumentException e) {
-            System.out.println("Wrong feed name: " +feedName + ", use -h for help");
+            System.out.println("Wrong feed name: " + feedName + ", use -h for help");
             System.exit(1);
         }
         return feedKey;
     }
 
-    private static Optional<StatsFormat>  getStatForm(String statName){
-        Optional<StatsFormat>  statsFormat = Optional.empty();
+    private static Optional<StatsFormat> getStatForm(String statName) {
+        Optional<StatsFormat> statsFormat = Optional.empty();
 
         try {
             statsFormat = Optional.of(StatsFormat.valueOf(statName.toUpperCase()));
@@ -116,17 +119,16 @@ public class UserInterface {
         printHeuristicHelpMssg();
         System.out.println("  -pf, --print-feed:                   Print the fetched feed");
         printStatsHelpMssg();
-        
+
     }
 
     public static void printHeuristicHelpMssg() {
         System.out.println("  -ne, --named-entity                 : Use the specified heuristic to extract");
         System.out.println("                                       named entities");
         System.out.println("                                       Available heuristic names are: ");
-        for (HeuristicType hType: HeuristicType.values()) {
-            System.out.println("                                       " + hType.getValue() + 
-                                ":" + hType.getDescription()
-                              );
+        for (HeuristicType hType : HeuristicType.values()) {
+            System.out.println("                                       " + hType.getValue() +
+                    ":" + hType.getDescription());
         }
 
     }
@@ -143,10 +145,9 @@ public class UserInterface {
     public static void printStatsHelpMssg() {
         System.out.println("  -sf, --stats-format <format>:        Print the stats in the specified format");
         System.out.println("                                       Available formats are: ");
-        for (StatsFormat sFormat: StatsFormat.values()) {
-            System.out.println("                                       " + sFormat.getValue() + 
-                                ":" + sFormat.getDescription()
-                              );
+        for (StatsFormat sFormat : StatsFormat.values()) {
+            System.out.println("                                       " + sFormat.getValue() +
+                    ":" + sFormat.getDescription());
         }
     }
 

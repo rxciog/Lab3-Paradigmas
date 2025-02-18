@@ -11,7 +11,8 @@ public class Location extends NamedEntity {
     private double latitude;
     private double longitude;
 
-    public Location(String name, Category category, List<Topic> topic, int mentions, List<String> keywords, int postCode, double latitude, double longitude) {
+    public Location(String name, Category category, List<Topic> topic, int mentions, List<String> keywords,
+            int postCode, double latitude, double longitude) {
         super(name, category, topic, mentions, keywords); // Assuming NamedEntity has a constructor that takes a name
         this.name = name;
         this.postCode = postCode;
@@ -27,11 +28,11 @@ public class Location extends NamedEntity {
         return postCode;
     }
 
-    public double  getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 
-    public double  getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 }

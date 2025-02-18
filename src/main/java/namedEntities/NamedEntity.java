@@ -29,19 +29,19 @@ public abstract class NamedEntity implements Serializable {
         return category;
     }
 
-    public List<Topic>  getTopic() {
+    public List<Topic> getTopic() {
         return topic;
     }
 
-    public int getMentions(){
+    public int getMentions() {
         return mentions;
     }
 
-    public void setMentions(int mentions){
-         this.mentions = mentions;
+    public void setMentions(int mentions) {
+        this.mentions = mentions;
     }
 
-    public List<String> getKeywords (){
+    public List<String> getKeywords() {
         return keywords;
     }
 }

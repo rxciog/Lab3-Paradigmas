@@ -15,8 +15,7 @@ public class Config {
     private Optional<StatsFormat> stats;
 
     public Config(boolean help, boolean printFeed, boolean computeNamedEntities, FeedType feedKey,
-                  Optional<HeuristicType> heuristic, Optional<StatsFormat> stats
-                 ){
+            Optional<HeuristicType> heuristic, Optional<StatsFormat> stats) {
         this.help = help;
         this.printFeed = printFeed;
         this.computeNamedEntities = computeNamedEntities;

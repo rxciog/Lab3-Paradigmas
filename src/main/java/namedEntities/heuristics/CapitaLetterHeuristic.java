@@ -1,4 +1,5 @@
 package namedEntities.heuristics;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import utils.JSONParser;
 
 public class CapitaLetterHeuristic implements Heuristic {
 
-    //Extendemos la heuristica existente
+    // Extendemos la heuristica existente
 
     public List<String> extractCandidates(String text) {
 
@@ -20,13 +21,11 @@ public class CapitaLetterHeuristic implements Heuristic {
 
         text = text.replaceAll("[-+.^:]", "");
 
-        //Buscamos palabras del tipo:
+        // Buscamos palabras del tipo:
         // Mayúscula Mayúscula, Mayúscula, MAYÚSCULA, maYÚScula
         Pattern pattern = Pattern.compile("[A-Z][a-z]+(?:\\s[A-Z][a-z]+)*"
-                                            + "|" + "\\b[A-Z]+\\b"
-                                            + "|" + "\\b[a-z]+[A-Z]+[a-z]+\\b"
-                                            );
-
+                + "|" + "\\b[A-Z]+\\b"
+                + "|" + "\\b[a-z]+[A-Z]+[a-z]+\\b");
 
         Matcher matcher = pattern.matcher(text);
 
@@ -40,9 +39,10 @@ public class CapitaLetterHeuristic implements Heuristic {
             if (is == null) {
                 throw new IOException("No se encontró el archivo: " + filepath);
             }
-            
+
             Set<String> stopWords = JSONParser.parseJsonList(is);
-            candidates = candidates.stream().filter(word -> !stopWords.contains(word.toLowerCase())).collect(Collectors.toList());
+            candidates = candidates.stream().filter(word -> !stopWords.contains(word.toLowerCase()))
+                    .collect(Collectors.toList());
 
         } catch (Exception e) {
             System.out.println("Error al leer archivo json: ");

@@ -41,7 +41,7 @@ public class App {
         try {
             Config config = ui.handleInput(args);
             run(config, feedsDataArray);
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
             UserInterface.printHelp(feedsDataArray);
             System.exit(1);
@@ -55,24 +55,25 @@ public class App {
             System.out.println("No se encontraron feeds");
             return;
         }
-        if (config.getHelp()){
+        if (config.getHelp()) {
             UserInterface.printHelp(feedsDataArray);
             return;
         }
 
         // Guardamos en allArticles los artículos de los feeds correspondientes
         List<String> feedList = extractURL(config, feedsDataArray);
-        if (feedList.isEmpty()){
+        if (feedList.isEmpty()) {
             System.out.println("No se encontró el feed especificado... ");
             return;
         }
         List<Article> allArticles = getAllArticles(feedList);
 
-        if (config.getPrintFeed()) {printFeed(allArticles);}
-
+        if (config.getPrintFeed()) {
+            printFeed(allArticles);
+        }
 
         if (config.getComputeNamedEntities() && config.getHeuristic().isPresent()) {
-            //Creamos el punto de entrada para poder usar la API de Spark
+            // Creamos el punto de entrada para poder usar la API de Spark
             SparkSession spark = SparkSession.builder().appName("NER&Classification").getOrCreate();
             JavaRDD<String> articles = loadArticles(allArticles, spark);
 
@@ -85,34 +86,34 @@ public class App {
 
     }
 
-    private static List<String> extractURL (Config config, List<FeedsData> feedsDataArray) {
+    private static List<String> extractURL(Config config, List<FeedsData> feedsDataArray) {
         List<String> urList = new ArrayList<>();
 
         if (!config.getFeedKey().equals(FeedType.ALL)) {
-            for (FeedsData feed : feedsDataArray){
-                if (feed.getLabel().equals(config.getFeedKey().getValue())){
+            for (FeedsData feed : feedsDataArray) {
+                if (feed.getLabel().equals(config.getFeedKey().getValue())) {
                     urList.add(feed.getUrl());
                     break;
-                } 
+                }
             }
         } else {
-            for (FeedsData feed : feedsDataArray){
+            for (FeedsData feed : feedsDataArray) {
                 urList.add(feed.getUrl());
             }
         }
-        
+
         return urList;
     }
 
-    private static List<Article> getAllArticles (List<String> feedList) {
+    private static List<Article> getAllArticles(List<String> feedList) {
 
-        List<Article>  allArticles = new ArrayList<>();
+        List<Article> allArticles = new ArrayList<>();
         try {
             for (String feedURL : feedList) {
                 String feed = FeedParser.fetchFeed(feedURL);
                 allArticles.addAll(FeedParser.parseXML(feed));
             }
-            
+
         } catch (Exception e) {
             System.err.println("Exception occurred: " + e.getMessage());
         }
@@ -120,57 +121,59 @@ public class App {
         return allArticles;
     }
 
-    private static void printFeed(List<Article> allArticles){
+    private static void printFeed(List<Article> allArticles) {
         System.out.println("Printing feed(s): ");
         for (Article article : allArticles) {
             article.print();
         }
     }
 
-    private static JavaRDD<String> loadArticles(List<Article> allArticles, SparkSession spark){
+    private static JavaRDD<String> loadArticles(List<Article> allArticles, SparkSession spark) {
         String path = "./src/main/resources/bigData.txt";
         createFeedFile(allArticles, path);
-        
-        //JavaRDD<String> articles = spark.read().textFile("./src/main/resources/wiki_dump_parcial.txt").javaRDD();
+
+        // JavaRDD<String> articles =
+        // spark.read().textFile("./src/main/resources/wiki_dump_parcial.txt").javaRDD();
         JavaRDD<String> articles = spark.read().textFile(path).javaRDD();
         return articles;
     }
 
-    private static JavaRDD<String> computeNamedEntities (JavaRDD<String> allArticles, HeuristicType heuristicName, SparkSession spark){
+    private static JavaRDD<String> computeNamedEntities(JavaRDD<String> allArticles, HeuristicType heuristicName,
+            SparkSession spark) {
         // TODO: complete the message with the selected heuristic name
         System.out.println("Computing named entities using " + heuristicName);
         JavaRDD<String> namedEntities = null;
 
         try {
             Heuristic heuristic = HeuristicFactory.createHeuristic(heuristicName);
-            namedEntities = allArticles.mapPartitions(iter -> { 
+            namedEntities = allArticles.mapPartitions(iter -> {
                 List<String> articles = new ArrayList<>();
                 iter.forEachRemaining(articles::add);
 
                 String concat = String.join(" ", articles);
                 return heuristic.extractCandidates(concat).iterator();
             });
-                                        
-        } catch (IllegalArgumentException e ){
+
+        } catch (IllegalArgumentException e) {
             UserInterface.printHeuristicHelpMssg();
             System.exit(1);
         }
-        return namedEntities; 
+        return namedEntities;
     }
 
-    private static void createFeedFile(List<Article> allArticles , String strPath){
+    private static void createFeedFile(List<Article> allArticles, String strPath) {
         Path path = Paths.get(strPath);
 
-        for ( Article article : allArticles){
+        for (Article article : allArticles) {
             try {
                 Files.write(path, article.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            } catch (IOException e){
+            } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
         }
     }
 
-    private static List<NamedEntity> computeStats(JavaRDD<String> namedEntities, SparkSession spark){
+    private static List<NamedEntity> computeStats(JavaRDD<String> namedEntities, SparkSession spark) {
         // TODO: compute named entities using the selected heuristic
         System.out.println("Computing stats on named entities...");
 
@@ -179,13 +182,14 @@ public class App {
         return entities;
     }
 
-    private static void printStats(List<NamedEntity> entities, StatsFormat statType ){
+    private static void printStats(List<NamedEntity> entities, StatsFormat statType) {
         // TODO: Print stats
         System.out.println("\nStats: ");
-        if ( statType.equals(StatsFormat.TOP)){
+        if (statType.equals(StatsFormat.TOP)) {
             stat.getStatsByTopic(entities);
         } else {
-            if (!statType.equals(StatsFormat.CAT)) System.out.println("Defaulting to stats by category ...");
+            if (!statType.equals(StatsFormat.CAT))
+                System.out.println("Defaulting to stats by category ...");
             stat.getStatsByCategory(entities);
         }
         System.out.println("-".repeat(80));

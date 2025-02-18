@@ -6,8 +6,9 @@ import namedEntities.Classification.Category;
 import namedEntities.Classification.Topic;
 
 public class NamedEntityFactory {
-    public static NamedEntity createNamedEntity(String name, Category category, List<Topic> topic, int mentions, List<String> keywords){
-        switch (category){
+    public static NamedEntity createNamedEntity(String name, Category category, List<Topic> topic, int mentions,
+            List<String> keywords) {
+        switch (category) {
             case ORGANIZATION:
                 return new Organization(name, category, topic, mentions, keywords, "UNK");
             case OTHER:
