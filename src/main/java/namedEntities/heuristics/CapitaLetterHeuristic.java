@@ -20,8 +20,8 @@ public class CapitaLetterHeuristic implements Heuristic {
 
         text = text.replaceAll("[-+.^:]", "");
 
-        // Matchear patrón 
-
+        //Buscamos palabras del tipo:
+        // Mayúscula Mayúscula, Mayúscula, MAYÚSCULA, maYÚScula
         Pattern pattern = Pattern.compile("[A-Z][a-z]+(?:\\s[A-Z][a-z]+)*"
                                             + "|" + "\\b[A-Z]+\\b"
                                             + "|" + "\\b[a-z]+[A-Z]+[a-z]+\\b"
@@ -33,8 +33,8 @@ public class CapitaLetterHeuristic implements Heuristic {
         while (matcher.find()) {
             candidates.add(matcher.group());
         }
-        // Filtrar
 
+        // Filtrar palabras que no son stopwords
         String filepath = "/stopwords.json";
         try (InputStream is = getClass().getResourceAsStream(filepath)) {
             if (is == null) {

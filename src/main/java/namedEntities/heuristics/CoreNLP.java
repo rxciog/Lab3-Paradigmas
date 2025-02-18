@@ -12,8 +12,11 @@ public class CoreNLP  implements Heuristic {
     public List<String> extractCandidates(String text){
         List<String> candidates = new ArrayList<>();
 
+        // Filtrar palabras que no son stopwords
         Properties props = new  Properties();
         props.setProperty("annotators", "tokenize, ssplit, ner");
+
+        //Usamos el modelo en español
         StanfordCoreNLP pipeline = new StanfordCoreNLP("spanish");
 
         CoreDocument document = new CoreDocument(text);

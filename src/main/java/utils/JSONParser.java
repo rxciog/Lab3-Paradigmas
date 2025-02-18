@@ -58,15 +58,19 @@ public class JSONParser {
         InputStream inputStream = JSONParser.class.getResourceAsStream(filepath);
         String jsonData = "";
         
+        //Leemos todas las líneas del stream de input y lo guardamos en un solo string
         try ( BufferedReader buffer = new BufferedReader(new InputStreamReader(inputStream))){
             jsonData = buffer.lines().collect(Collectors.joining("\n"));
         } catch (Exception e){
             System.out.println(e.getMessage());
         }
+
+        //Convertimos el string en un arreglo json con el cual podemos trabajar
         JSONArray jsonArray = new JSONArray(jsonData);
         List<NamedEntity> dict = new ArrayList<>();
 
         for (int i = 0; i < jsonArray.length(); i++) {
+            //Para cada objeto del arreglo extraemos los valores de los campos que nos interesan
             JSONObject jsonObject = jsonArray.getJSONObject(i);
 
             String label = jsonObject.getString("label");

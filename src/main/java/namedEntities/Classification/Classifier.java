@@ -22,12 +22,15 @@ public class Classifier implements Serializable {
         List<NamedEntity> result = new ArrayList<>();
         List<NamedEntity> entitiesInDict = new ArrayList<>();
 
+        //Cargamos las entidades nombradas en nuestro diccionario a una lista
         try {
             entitiesInDict = JSONParser.parseJsonDict("/data/dictionary.json");
         } catch (Exception e) {
             System.out.println(e.getMessage());
             System.exit(1);
         }
+
+        //Contamos las ocurrencias de cada entidad en nuestro archivo big data
         JavaPairRDD<String, Integer> ones = entities.mapToPair(s -> new Tuple2<>(s, 1));
         JavaPairRDD<String, Integer> countedEntities = ones.reduceByKey((i1, i2) -> i1 + i2);
 
@@ -49,7 +52,7 @@ public class Classifier implements Serializable {
         entities.forEachRemaining(entitiesList::add);
 
         boolean added = false;
-        // Classify each entity
+        // Vemos si la entidad se encuentra en nuestro diccionario, si no, su categoría y tópico son OTHER
         for (Tuple2<String, Integer> entity: entitiesList){
             for (NamedEntity ne: entitiesInDict){
                 if (ne.getKeywords().contains(entity._1())){
